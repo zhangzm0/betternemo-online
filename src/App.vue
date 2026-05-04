@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { alert as mdAlert } from "mdui/functions/alert.js";
-import { ref } from "vue";
+import { ref, provide } from "vue";
 import type { Dialog } from 'mdui/components/dialog.js';
 
 const aboutDialog = ref<Dialog | null>(null)
@@ -9,21 +8,6 @@ const openAbout = () => {
     return
   };
   aboutDialog.value.open = true;
-  const aboutDialogShadowRoot = aboutDialog.value.shadowRoot;
-  if (!aboutDialogShadowRoot) {
-    return
-  };
-  const aboutDialogDescription = aboutDialogShadowRoot.querySelector('.description');
-  if (!aboutDialogDescription) {
-    return
-  };
-  aboutDialogDescription.replaceChildren();
-  const text = `BetterNemo-Online
-该项目与点猫科技无关。`
-  text.split('\n').forEach((line: string, index: number) => {
-    if (index > 0) aboutDialogDescription.append(document.createElement('br'))
-    aboutDialogDescription.append(line)
-  })
 }
 
 const closeAbout = () => {
@@ -32,6 +16,8 @@ const closeAbout = () => {
   };
   aboutDialog.value.open = false;
 }
+
+provide('aboutDialog', aboutDialog)
 </script>
 
 <template>
@@ -50,8 +36,10 @@ const closeAbout = () => {
     </mdui-top-app-bar>
     <RouterView />
   </mdui-layout>
-  <mdui-dialog class="about-dialog" ref="aboutDialog" headline="关于BetterNemo-Online" description="本项目和点猫科技无关。"
-    close-on-overlay-click>
+  <mdui-dialog class="about-dialog" ref="aboutDialog" close-on-overlay-click>
+    <span class="about-dialog-description">BetterNemo-Online<br>
+      Powered By BetterNemo开发组
+    </span>
     <mdui-button slot="action" @click="closeAbout()">确定</mdui-button>
   </mdui-dialog>
 
