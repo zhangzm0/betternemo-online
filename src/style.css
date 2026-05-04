@@ -1,4 +1,10 @@
+@import url('./assets/fonts/global.css');
+
 html,
 body {
   margin: 0;
+}
+
+* {
+  font-family: 'OPPOSans4.0';
 }
