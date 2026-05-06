@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watchEffect } from 'vue'
-import { BNWorkspaceBridge } from '@/utils/bnWorkspaceBridge'
-import { setBridgeInstance, getBridgeInstance, clearBridgeInstance } from '@/utils/bridgeInstance';
-
+import { ref, onBeforeUnmount, watchEffect } from 'vue'
 import { snackbar } from "mdui/functions/snackbar.js";
-
+import { getBridgeInstance, clearBridgeInstance } from '@/utils/bridgeInstance'
 import { useBNStateStore } from "@/stores/bnState";
 
 // 组件状态
 
 const bnState = useBNStateStore()
-const iframeSrc = ref('')
+
 const iframeRef = ref<any>(null)
 
 function onIframeLoad() {

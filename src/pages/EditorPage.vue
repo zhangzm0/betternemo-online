@@ -1,20 +1,10 @@
 <script setup lang="ts">
-import { ref, inject } from "vue";
-import type { Dialog } from 'mdui/components/dialog.js';
-
 import { useBNStateStore } from "@/stores/bnState";
 
 import BN from "@/components/BN.vue";
+import AppBarMenu from "@/components/AppBarMenu.vue";
 
 const bnState = useBNStateStore()
-const aboutDialog = inject('aboutDialog', ref<Dialog | null>(null))
-const openAbout = () => {
-  if (!aboutDialog.value) {
-    return
-  };
-  aboutDialog.value.open = true;
-}
-
 const playWork = () => {
   bnState.isPlay = !bnState.isPlay
   bnState.isActorPage = !bnState.isActorPage
@@ -27,11 +17,8 @@ const playWork = () => {
       <div slot="trigger">
         <mdui-button-icon icon="menu" slot="top" class="phone-menu-button"></mdui-button-icon>
       </div>
-      <mdui-menu>
-        <mdui-menu-item @click="bnState.newWork(true)">新建作品</mdui-menu-item>
-        <mdui-menu-item>打开作品</mdui-menu-item>
-        <mdui-divider></mdui-divider>
-        <mdui-menu-item @click="openAbout()">关于 BetterNemo-Online</mdui-menu-item>
+      <mdui-menu class="phone-menu">
+        <AppBarMenu />
       </mdui-menu>
     </mdui-dropdown>
     <mdui-navigation-rail-item icon="code" value="code"
@@ -53,6 +40,10 @@ const playWork = () => {
 
 .bn {
   height: 100vh;
+}
+
+.phone-menu {
+  padding: 8px;
 }
 
 .phone-menu-button {

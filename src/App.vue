@@ -1,20 +1,14 @@
 <script setup lang="ts">
-import { ref, provide } from "vue";
+import { ref, provide, watchEffect } from "vue";
 import type { Dialog } from 'mdui/components/dialog.js';
 
 import AppBarMenu from "./components/AppBarMenu.vue";
 
-import { useBNStateStore } from "@/stores/bnState";
+//import { useBNStateStore } from "@/stores/bnState";
+//const bnState = useBNStateStore()
 
-const bnState = useBNStateStore()
 const aboutDialog = ref<Dialog | null>(null)
-const showOperate = ref(false)
-const openAbout = () => {
-  if (!aboutDialog.value) {
-    return
-  };
-  aboutDialog.value.open = true;
-}
+const showOperate = ref(window.localStorage.getItem('showOperate') == 'true')
 
 const closeAbout = () => {
   if (!aboutDialog.value) {
@@ -22,6 +16,10 @@ const closeAbout = () => {
   };
   aboutDialog.value.open = false;
 }
+
+watchEffect(() => {
+  window.localStorage.setItem("showOperate", String(showOperate.value))
+})
 
 provide('aboutDialog', aboutDialog)
 </script>
