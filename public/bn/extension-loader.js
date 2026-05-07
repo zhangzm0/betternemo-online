@@ -142,10 +142,11 @@ let themeMetaData = {};
 // --------------- 劫持Nemo向Webview发送的数据 ---------------
 let ok = false;
 let theatreTimer = null;
+const originalPostMessage = window._dsf.postMessage;
+const originalPostMessageAsync = window._dsaf.postMessageAsyn;
 setInterval(() => {
   // window._dsInit = true;
-  if (window._dsf) {
-    const postMessage = _dsf.postMessage;
+  if (window._dsf && window.originalPostMessage) {
     window['postMsg'] = _dsf.postMessage;
     _dsf.postMessage = (...args) => {
       if (experimentalConfig.webview_debug) {
@@ -160,15 +161,14 @@ setInterval(() => {
           let data = JSON.parse(args[1]);
           data.context_menu_with_set_block_visibility = true;
           data.translucent_block_visible = 'translucent';
-          return postMessage.apply(_dsf, [
+          return originalPostMessage.apply(_dsf, [
             'INIT_WEBVIEW_DATA',
             JSON.stringify(data)
           ]);
         }
       }
-      return postMessage.apply(_dsf, args);
+      return originalPostMessage.apply(_dsf, args);
     };
-    const postMessageAsyn = _dsaf.postMessageAsyn;
     window['postMsgAsyn'] = _dsaf.postMessageAsyn;
     _dsaf.postMessageAsyn = async (...args) => {
       if (experimentalConfig.webview_debug) {
@@ -178,7 +178,7 @@ setInterval(() => {
           data: [...args]
         }));
       }
-      return postMessageAsyn.apply(_dsaf, args);
+      return originalPostMessageAsync.apply(_dsaf, args);
     };
   }
 }, 10);
