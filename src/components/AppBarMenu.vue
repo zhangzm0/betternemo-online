@@ -114,14 +114,14 @@ const saveFile = async () => {
       </mdui-menu>
     </mdui-dropdown>
     <mdui-dropdown>
-      <mdui-button variant="outlined" slot="trigger" class="pc-menu-button">作品</mdui-button>
+      <mdui-button variant="outlined" slot="trigger" class="pc-menu-button" disabled>作品</mdui-button>
       <mdui-menu>
         <mdui-menu-item>重命名</mdui-menu-item>
         <mdui-menu-item>高级</mdui-menu-item>
       </mdui-menu>
     </mdui-dropdown>
     <mdui-dropdown>
-      <mdui-button variant="outlined" slot="trigger" class="pc-menu-button">账号</mdui-button>
+      <mdui-button variant="outlined" slot="trigger" class="pc-menu-button" disabled>账号</mdui-button>
       <mdui-menu>
         <mdui-menu-item>登录</mdui-menu-item>
       </mdui-menu>
