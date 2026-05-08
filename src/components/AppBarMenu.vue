@@ -5,6 +5,8 @@ import type { Dialog } from 'mdui/components/dialog.js';
 import { useBNStateStore } from "@/stores/bnState";
 import { downloadString } from "@/utils/blobTools";
 
+import { prompt as mdPrompt } from 'mdui/functions/prompt.js';
+
 interface SaveDataResult {
   xml: Record<string, any>;
   block_count: number;
@@ -100,6 +102,18 @@ const saveFile = async () => {
   bnState.bcmJson.split_options.options_dict = workResult.split_options as any
   downloadString(JSON.stringify(bnState.bcmJson, null, 4), `${bnState.bcmJson.project_name}.json`)
 }
+
+const changeWorkName = () => {
+  mdPrompt({
+    headline: "重命名作品",
+    confirmText: "确定",
+    cancelText: "取消",
+    textFieldOptions: {
+      value: bnState?.bcmJson?.project_name ?? ''
+    },
+    onConfirm: (value) => { bnState.bcmJson.project_name = String(value) },
+  });
+}
 </script>
 <template>
   <div class="top-app-bar-menu">
@@ -114,10 +128,14 @@ const saveFile = async () => {
       </mdui-menu>
     </mdui-dropdown>
     <mdui-dropdown>
-      <mdui-button variant="outlined" slot="trigger" class="pc-menu-button" disabled>作品</mdui-button>
+      <mdui-button variant="outlined" slot="trigger" class="pc-menu-button">作品</mdui-button>
       <mdui-menu>
-        <mdui-menu-item>重命名</mdui-menu-item>
-        <mdui-menu-item>高级</mdui-menu-item>
+        <mdui-menu-item @click="changeWorkName()">重命名</mdui-menu-item>
+        <mdui-menu-item>
+          高级
+          <mdui-menu-item slot="submenu" disabled>修改屏幕尺寸</mdui-menu-item>
+          <mdui-menu-item slot="submenu" disabled>修改作品JSON</mdui-menu-item>
+        </mdui-menu-item>
       </mdui-menu>
     </mdui-dropdown>
     <mdui-dropdown>

@@ -2,11 +2,14 @@
 import { ref, provide, watchEffect } from "vue";
 import type { Dialog } from 'mdui/components/dialog.js';
 
+import { useBNStateStore } from "@/stores/bnState";
+
 import AppBarMenu from "./components/AppBarMenu.vue";
 
 //import { useBNStateStore } from "@/stores/bnState";
 //const bnState = useBNStateStore()
 
+const bnState = useBNStateStore()
 const aboutDialog = ref<Dialog | null>(null)
 const showOperate = ref(window.localStorage.getItem('showOperate') == 'true')
 
@@ -34,6 +37,11 @@ provide('aboutDialog', aboutDialog)
           <AppBarMenu v-if="!showOperate" />
         </div>
       </mdui-top-app-bar-title>
+      <div class="top-app-bar-work-name">
+        <mdui-text-field variant="outlined" @change="bnState.bcmJson.project_name = $event.target.value"
+          class="top-app-bar-work-name-field" :value="bnState?.bcmJson?.project_name ??
+            '默认作品名'"></mdui-text-field>
+      </div>
       <div class="show-more-operate">
         <span>展开</span>
         <mdui-switch checked-icon="" :checked="showOperate" @change="showOperate = $event.target.checked"></mdui-switch>
@@ -59,6 +67,22 @@ provide('aboutDialog', aboutDialog)
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.top-app-bar-work-name {
+  position: absolute;
+  width: 35%;
+  min-width: 300px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.top-app-bar-work-name-field {
+  height: 42px;
+}
+
+.top-app-bar-work-name-field::part(container) {
+  border-radius: 99999px;
 }
 
 .show-more-operate {

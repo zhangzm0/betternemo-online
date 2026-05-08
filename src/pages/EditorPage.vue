@@ -44,6 +44,7 @@ const playWork = () => {
 
 .phone-menu {
   padding: 8px;
+  max-width: 100%;
 }
 
 .phone-menu-button {
