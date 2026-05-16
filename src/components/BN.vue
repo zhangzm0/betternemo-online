@@ -4,10 +4,12 @@ import { snackbar } from "mdui/functions/snackbar.js";
 import { getBridgeInstance, clearBridgeInstance } from '@/utils/bridgeInstance'
 import { useBNStateStore } from "@/stores/bnState";
 import { usePagesStore } from '@/stores/pages';
+import { useDomStore } from '@/stores/dom';
 
 // 组件状态
 
 const bnState = useBNStateStore()
+const domStore = useDomStore()
 const pages = usePagesStore()
 const isLoaded = ref(false)
 
@@ -17,7 +19,7 @@ function onIframeLoad() {
   const iframeDom = iframeRef.value
   if (!iframeDom) return
   // 同步真实DOM到Store
-  bnState.iframeRef = iframeDom
+  domStore.iframeRef = iframeDom
   // 初始化默认作品
   if (!isLoaded.value) { bnState.newWork() }
   isLoaded.value = true

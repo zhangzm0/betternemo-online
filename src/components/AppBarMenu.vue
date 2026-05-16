@@ -67,6 +67,22 @@ const changeWorkName = () => {
   });
 }
 
+const changeWorkID = () => {
+  mdPrompt({
+    headline: "修改作品ID",
+    description: "修改后可使用云功能 (作品JSON需和云端保持一致)",
+    confirmText: "确定",
+    cancelText: "取消",
+    textFieldOptions: {
+      value: String(bnState.workId),
+      type: 'number'
+    },
+    onConfirm: (value) => {
+      bnState.goWork(bnState.bcmJson, undefined, Number(value))
+    },
+  });
+}
+
 watch(
   () => bnState.isPad,
   () => {
@@ -93,6 +109,7 @@ watch(
         <mdui-menu-item>
           高级
           <mdui-menu-item slot="submenu" @click="bnState.isPad = !bnState.isPad">修改编辑器UI类型</mdui-menu-item>
+          <mdui-menu-item slot="submenu" @click="changeWorkID()">修改作品ID</mdui-menu-item>
         </mdui-menu-item>
       </mdui-menu>
     </mdui-dropdown>

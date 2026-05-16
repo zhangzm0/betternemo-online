@@ -68,7 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
       return { success: true }
     } catch (err) {
       console.error('失败:', err)
-      return { success: false }
+      return { success: false, error: err }
     }
   }
   function changeShowLogin(value: boolean) {

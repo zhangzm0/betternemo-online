@@ -8,6 +8,9 @@ import { useAuthStore } from "./stores/auth";
 //import { useBNStateStore } from "@/stores/bnState";
 //const bnState = useBNStateStore()
 
+import { snackbar as mdSnackbar } from 'mdui/functions/snackbar.js';
+
+const vipUserList = ['12553235', '6902335']
 const bnState = useBNStateStore()
 const authStore = useAuthStore()
 const aboutDialog = ref<Dialog | null>(null)
@@ -31,14 +34,29 @@ document.title = `BetterNemo-Online : ${bnState.bcmJson.project_name}`
 const loginCodemao = async (e: SubmitEvent) => {
   e.preventDefault();
   const form = e.target;
-  authStore.changeShowLogin(false)
   if (!form) {
     return
   }
   const formValue = new FormData(form as HTMLFormElement);
-  const login = authStore.loginUser(String(formValue.get('identity')), String(formValue.get('password')))
-  if ((await login).success && loginDialog.value) {
-    loginDialog.value.open = false
+  mdSnackbar({
+    message: `登录中...`,
+    closeable: true,
+  })
+  const login = await authStore.loginUser(String(formValue.get('identity')), String(formValue.get('password')))
+  if (login.success && loginDialog.value) {
+    authStore.changeShowLogin(false)
+    const getUser = await authStore.getUserData()
+    if (getUser.success && vipUserList.includes(String(authStore.userData.userInfo.user.id))) {
+      mdSnackbar({
+        message: `${authStore.userData.userInfo.user.nickname},Welcome To BetterNemo-Online`,
+        closeable: true,
+      })
+    }
+  } else if (!login.success && loginDialog.value) {
+    mdSnackbar({
+      message: `登录失败: ${login.error ?? '未知原因'}`,
+      closeable: true,
+    })
   }
 }
 

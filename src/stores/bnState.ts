@@ -4,6 +4,7 @@ import { getBridgeInstance, setBridgeInstance, clearBridgeInstance } from '@/uti
 import { BNWorkspaceBridge } from '@/utils/bnWorkspaceBridge'
 import { snackbar } from 'mdui/functions/snackbar.js'
 import { useAuthStore } from './auth'
+import { useDomStore } from './dom'
 
 interface SaveDataResult {
   xml: Record<string, any>
@@ -20,6 +21,7 @@ interface SaveDataResult {
 
 export const useBNStateStore = defineStore('bnState', () => {
   const authStore = useAuthStore()
+  const domStore = useDomStore()
   const isPlay = ref(false)
   const isPad = ref(true)
   const defaultBCMJson = ref({
@@ -622,20 +624,23 @@ export const useBNStateStore = defineStore('bnState', () => {
   const bcmJson = reactive(defaultBCMJson.value)
   const currentActor = ref('')
   const actorList = ref<any>([])
-  const iframeRef = ref<HTMLIFrameElement | null>(null)
   const isLoading = ref(true)
+  const workId = ref(0)
   const workLoadingProgress = ref(0)
-  async function goWork(workJson: any, reload?: boolean) {
+  async function goWork(workJson: any, reload?: boolean, newWorkID?: number) {
     try {
       isLoading.value = true
-      if (!iframeRef.value || !iframeRef.value.contentWindow) {
+      if (!domStore.iframeRef || !domStore.iframeRef.contentWindow) {
         return
       }
       if (reload) {
-        iframeRef.value.contentWindow.location.reload()
+        domStore.iframeRef.contentWindow.location.reload()
+      }
+      if (newWorkID) {
+        workId.value = newWorkID
       }
       clearBridgeInstance()
-      setBridgeInstance(new BNWorkspaceBridge(iframeRef))
+      setBridgeInstance(new BNWorkspaceBridge({ value: domStore.iframeRef }))
       const bridgeInstance = getBridgeInstance()
       if (!bridgeInstance) {
         return
@@ -663,8 +668,6 @@ export const useBNStateStore = defineStore('bnState', () => {
               message: data_object?.payload?.text,
               closeable: true,
             })
-          case 'USER_LOGIN':
-            authStore.changeShowLogin(true)
         }
       }
 
@@ -681,9 +684,10 @@ export const useBNStateStore = defineStore('bnState', () => {
 
       // 获取用户信息
       await authStore.getUserData()
+      // 设置用户数据
       bridgeInstance.initWebviewData(
         String(authStore.userData.userInfo.user.id),
-        '0',
+        String(newWorkID ?? workId.value),
         authStore.userData.userInfo.user.nickname,
         isPad.value,
         authStore.userData.userInfo.user.avatar,
@@ -700,19 +704,19 @@ export const useBNStateStore = defineStore('bnState', () => {
     }
   }
   function newWork(reload?: boolean) {
-    if (!iframeRef.value || !iframeRef.value.contentWindow) {
+    if (!domStore.iframeRef || !domStore.iframeRef.contentWindow) {
       return
     }
     if (reload) {
-      iframeRef.value.contentWindow.location.reload()
+      domStore.iframeRef.contentWindow.location.reload()
     }
     goWork(defaultBCMJson.value)
   }
   async function syncWork() {
-    if (!iframeRef.value) {
+    if (!domStore.iframeRef) {
       return
     }
-    const iframeWin: any = iframeRef.value.contentWindow
+    const iframeWin: any = domStore.iframeRef.contentWindow
     if (!iframeWin || !iframeWin._dsaf) {
       console.error('iframe未加载完成或不同域')
       return
@@ -758,7 +762,6 @@ export const useBNStateStore = defineStore('bnState', () => {
   }
   return {
     newWork,
-    iframeRef,
     isPlay,
     bcmJson,
     defaultBCMJson,
@@ -769,5 +772,6 @@ export const useBNStateStore = defineStore('bnState', () => {
     syncWork,
     workLoadingProgress,
     isLoading,
+    workId,
   }
 })
