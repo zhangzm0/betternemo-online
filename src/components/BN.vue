@@ -49,8 +49,8 @@ watchEffect(() => {
 
 <template>
   <div class="bn-webview">
-    <iframe @error="onIframeError" @load="onIframeLoad" src="/bn/workspace.html" class="bn-webview-iframe"
-      ref="iframeRef"></iframe>
+    <iframe @error="onIframeError" @load="onIframeLoad" src="/betternemo-online/bn/workspace.html"
+      class="bn-webview-iframe" ref="iframeRef"></iframe>
   </div>
 </template>
 
