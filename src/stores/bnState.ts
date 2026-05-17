@@ -1,4 +1,4 @@
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { getBridgeInstance, setBridgeInstance, clearBridgeInstance } from '@/utils/bridgeInstance'
 import { BNWorkspaceBridge } from '@/utils/bnWorkspaceBridge'
@@ -621,7 +621,7 @@ export const useBNStateStore = defineStore('bnState', () => {
       },
     },
   })
-  const bcmJson = reactive(defaultBCMJson.value)
+  const bcmJson = ref(defaultBCMJson.value)
   const currentActor = ref('')
   const actorList = ref<any>([])
   const isLoading = ref(true)
@@ -637,16 +637,32 @@ export const useBNStateStore = defineStore('bnState', () => {
       if (reload) {
         domStore.iframeRef.contentWindow.location.reload()
       }
-      if (newWorkID) {
-        workId.value = newWorkID
-      }
+      bcmJson.value = workJson
+      console.log(workJson.project_name)
+      console.log(bcmJson.value.project_name)
       await new Promise((resolve) => setTimeout(resolve, 1000))
+      ;(domStore.iframeRef.contentWindow as unknown as any).bnOnline = true
       clearBridgeInstance()
       setBridgeInstance(new BNWorkspaceBridge({ value: domStore.iframeRef }))
       const bridgeInstance = getBridgeInstance()
       if (!bridgeInstance) {
         return
       }
+
+      // 获取用户信息
+      if (!authStore.notLogin) {
+        try {
+          const data = await authStore.getUserData()
+          if (!data.success) {
+            console.log(`无法加载账号信息`)
+            return
+          }
+        } catch (e) {
+          console.log(`登录账号出现问题:${e}`)
+          return
+        }
+      }
+
       // 初始化bridge实例
       bridgeInstance.registerListener()
       workLoadingProgress.value = 30
@@ -673,21 +689,25 @@ export const useBNStateStore = defineStore('bnState', () => {
         }
       }
 
+      if (!isLoading.value) {
+        console.log('作品已加载,不重复加载')
+        return
+      }
+
+      if (newWorkID) {
+        workId.value = newWorkID
+      }
       actorList.value = []
-      // 解析bcmJson
-      Object.entries(bcmJson.actors.actors_dict).forEach(([_, value]) => {
+      // 解析bcmJson.value
+      Object.entries(bcmJson.value.actors.actors_dict).forEach(([_, value]) => {
         actorList.value.push(value)
       })
-      currentActor.value = bcmJson.actors.current_actor
+      currentActor.value = bcmJson.value.actors.current_actor
 
       // 初始化数据
       console.log('BN iframe 加载完成')
       workLoadingProgress.value = 60
 
-      // 获取用户信息
-      if (!authStore.notLogin) {
-        await authStore.getUserData()
-      }
       // 设置用户数据
       bridgeInstance.initWebviewData(
         String(authStore.userData.userInfo.user.id),
@@ -714,7 +734,7 @@ export const useBNStateStore = defineStore('bnState', () => {
     if (reload) {
       domStore.iframeRef.contentWindow.location.reload()
     }
-    goWork(defaultBCMJson.value)
+    goWork(JSON.parse(JSON.stringify(defaultBCMJson.value)))
   }
   async function syncWork() {
     if (!domStore.iframeRef) {
@@ -744,8 +764,8 @@ export const useBNStateStore = defineStore('bnState', () => {
 
     workResult = result
     blocksInfo = result.xml
-    const actors_dict = bcmJson.actors.actors_dict
-    const scenes_dict = bcmJson.scenes.scenes_dict
+    const actors_dict = bcmJson.value.actors.actors_dict
+    const scenes_dict = bcmJson.value.scenes.scenes_dict
     for (const blockName of Object.keys(blocksInfo)) {
       if (Object.keys(actors_dict).includes(blockName)) {
         actors_dict[blockName as keyof typeof actors_dict].blocksXML =
@@ -756,13 +776,13 @@ export const useBNStateStore = defineStore('bnState', () => {
       }
     }
     console.log(workResult)
-    bcmJson.block_count.all_block_count = workResult.block_count
-    bcmJson.block_count.visible_block_count = workResult.block_count_visible_only
-    bcmJson.toolbox = workResult.toolbox
-    bcmJson.variable.variable_dict = workResult.variable_dict as any
-    bcmJson.broadcast.broadcast_dict = workResult.broadcast_dict as any
-    bcmJson.procedures.procedure_dict = workResult.procedure_dict as any
-    bcmJson.split_options.options_dict = workResult.split_options as any
+    bcmJson.value.block_count.all_block_count = workResult.block_count
+    bcmJson.value.block_count.visible_block_count = workResult.block_count_visible_only
+    bcmJson.value.toolbox = workResult.toolbox
+    bcmJson.value.variable.variable_dict = workResult.variable_dict as any
+    bcmJson.value.broadcast.broadcast_dict = workResult.broadcast_dict as any
+    bcmJson.value.procedures.procedure_dict = workResult.procedure_dict as any
+    bcmJson.value.split_options.options_dict = workResult.split_options as any
   }
   return {
     newWork,

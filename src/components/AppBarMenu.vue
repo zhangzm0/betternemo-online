@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, watch } from "vue";
+import { ref, inject, watch, onMounted } from "vue";
 import type { Dialog } from 'mdui/components/dialog.js';
 
 import { useBNStateStore } from "@/stores/bnState";
@@ -7,12 +7,18 @@ import { downloadString } from "@/utils/blobTools";
 
 import { prompt as mdPrompt } from 'mdui/functions/prompt.js';
 import { useAuthStore } from "@/stores/auth";
+import { setColorScheme } from "mdui";
+import { useDomStore } from "@/stores/dom";
+import JSZip from "jszip";
 
 const authStore = useAuthStore()
 const bnState = useBNStateStore()
+const domStore = useDomStore()
 const aboutDialog = inject('aboutDialog', ref<Dialog | null>(null))
 const loginDialog = inject('loginDialog', ref<Dialog | null>(null))
 const fileOpen = ref<HTMLInputElement | null>(null)
+const zipOpen = ref<HTMLInputElement | null>(null)
+const uiColor = ref('#2D0078')
 
 const token = localStorage.getItem('token')
 const userId = localStorage.getItem('userId')
@@ -29,6 +35,13 @@ const openFileWindow = () => {
     return
   };
   fileOpen.value.click()
+}
+
+const openZipWindow = () => {
+  if (!zipOpen.value) {
+    return
+  };
+  zipOpen.value.click()
 }
 
 const openFile = () => {
@@ -54,6 +67,41 @@ const openFile = () => {
   }
 }
 
+const openZip = async () => {
+  if (!zipOpen.value || !zipOpen.value.files) {
+    return
+  }
+  const file = zipOpen.value.files[0]
+  if (!file) {
+    return
+  }
+  const zip = new JSZip()
+  const zipData = await zip.loadAsync(file)
+
+  // 处理文件路径
+  if (!zipData.files['index.userimg']) return;
+  const userimg = await zipData.files['index.userimg'].async('string');
+  const userimgObject = JSON.parse(userimg)
+  const userimgPureObject = userimgObject?.user_img_dict
+  if (!userimgPureObject) return;
+  const userimgPureBlobList: any = {}
+  for (const [fileName, zipEntry] of Object.entries(zipData.files)) {
+    // 只处理素材文件
+    if (zipEntry.dir) continue;
+    if (!(fileName.startsWith("material/")) && !(fileName.startsWith("record/"))) continue;
+    const blob = await zipEntry.async('blob');
+    const url = URL.createObjectURL(blob);
+    userimgPureBlobList[fileName] = url
+  }
+  if (!zipData.files['index.bcm']) return;
+  const work = await zipData.files['index.bcm'].async('string');
+  const workObject = JSON.parse(work)
+  for (const [styleId] of Object.entries(workObject?.styles?.styles_dict || {})) {
+    workObject.styles.styles_dict[styleId].path = userimgPureBlobList[workObject.styles.styles_dict[styleId].path]
+  }
+  console.log(workObject.styles.styles_dict)
+  await bnState.goWork(JSON.parse(JSON.stringify(workObject)), true)
+}
 
 const saveFile = async () => {
   await bnState.syncWork()
@@ -93,13 +141,27 @@ const notLogin = async () => {
   await bnState.goWork(bnState.bcmJson, true)
 }
 
-
 watch(
   () => bnState.isPad,
   () => {
     bnState.goWork(bnState.bcmJson, true)
   }
 );
+
+watch(
+  uiColor,
+  (newVal) => {
+    setColorScheme(newVal)
+    const iframeWindow: any = domStore.iframeRef?.contentWindow
+    if (iframeWindow && iframeWindow.mdui && iframeWindow.mdui.setColorScheme) {
+      iframeWindow.mdui.setColorScheme(newVal)
+    }
+  }
+)
+
+onMounted(() => {
+  uiColor.value = '#2D0078'
+})
 </script>
 <template>
   <div class="top-app-bar-menu">
@@ -109,7 +171,8 @@ watch(
         <mdui-menu-item @click="bnState.newWork(true)">新建作品</mdui-menu-item>
         <mdui-menu-item>打开作品</mdui-menu-item>
         <mdui-divider></mdui-divider>
-        <mdui-menu-item @click="openFileWindow()">打开本地作品</mdui-menu-item>
+        <mdui-menu-item @click="openFileWindow()">打开 .json 作品</mdui-menu-item>
+        <mdui-menu-item @click="openZipWindow()">打开 .bcmbn 作品</mdui-menu-item>
         <mdui-menu-item @click="saveFile()">下载作品</mdui-menu-item>
       </mdui-menu>
     </mdui-dropdown>
@@ -140,13 +203,21 @@ watch(
       </mdui-menu>
     </mdui-dropdown>
     <mdui-dropdown>
+      <mdui-button variant="outlined" slot="trigger" class="pc-menu-button" stay-open-on-click>编辑器</mdui-button>
+      <mdui-menu>
+        <mdui-menu-item>调整颜色<mdui-menu-item slot="submenu"><input type="color" class="change-color-input"
+              ref="changeColorInput" v-model="uiColor"></mdui-menu-item></mdui-menu-item>
+      </mdui-menu>
+    </mdui-dropdown>
+    <mdui-dropdown>
       <mdui-button variant="outlined" slot="trigger" class="pc-menu-button">帮助</mdui-button>
       <mdui-menu>
         <mdui-menu-item @click="openAbout()">Q&A</mdui-menu-item>
       </mdui-menu>
     </mdui-dropdown>
   </div>
-  <input type="file" class="file-open" ref="fileOpen" accept=".json" title="打开本地作品" @change="openFile()" />
+  <input type="file" class="file-open" ref="fileOpen" accept=".json" title="打开 .json 作品" @change="openFile()" />
+  <input type="file" class="file-open" ref="zipOpen" accept=".bcmbn" title="打开 .bcmbn 作品" @change="openZip()" />
 </template>
 <style scoped>
 .top-app-bar-menu {
@@ -162,4 +233,6 @@ watch(
 .file-open {
   display: none;
 }
+
+.change-color-input {}
 </style>
