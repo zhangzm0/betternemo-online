@@ -68,6 +68,9 @@ onMounted(() => {
   if (!localStorage.getItem('token') || !localStorage.getItem('userId')) {
     authStore.changeShowLogin(true)
   }
+  window.onbeforeunload = function (event) {
+    event.preventDefault();
+  }
 })
 
 provide('aboutDialog', aboutDialog)
