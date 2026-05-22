@@ -3,7 +3,7 @@ import { ref, inject, watch, onMounted } from "vue";
 import type { Dialog } from 'mdui/components/dialog.js';
 
 import { useBNStateStore } from "@/stores/bnState";
-import { downloadString } from "@/utils/blobTools";
+import { downloadBlob, downloadString } from "@/utils/blobTools";
 
 import { prompt as mdPrompt } from 'mdui/functions/prompt.js';
 import { useAuthStore } from "@/stores/auth";
@@ -25,6 +25,8 @@ const needLoadExtensions = ref<{ name: string, workVersion: string, version: (st
 
 const token = localStorage.getItem('token')
 const userId = localStorage.getItem('userId')
+
+const userimgPureBlobList: Record<string, any> = {}
 
 const openAbout = () => {
   if (!aboutDialog.value) {
@@ -90,11 +92,11 @@ const openZip = async () => {
     const userimgObject = JSON.parse(userimg)
     const userimgPureObject = userimgObject?.user_img_dict
     if (!userimgPureObject) return;
-    const userimgPureBlobList: any = {}
     for (const [fileName, zipEntry] of Object.entries(zipData.files)) {
       // 只处理素材文件
       if (zipEntry.dir) continue;
       if (!(fileName.startsWith("material/")) && !(fileName.startsWith("record/"))) continue;
+      // 生成Blob
       const blob = await zipEntry.async('blob');
       const url = URL.createObjectURL(blob);
       userimgPureBlobList[fileName] = url
@@ -196,6 +198,46 @@ const openZipWorkAndExtensions = async () => {
   workExtensionsDialog.value.open = false
 }
 
+const saveJsonFile = async () => {
+  const zip = new JSZip();
+  await bnState.syncWork()
+  const bcmbnWorkJson = bnState.bcmJson
+  const userImgDict = { "user_img_dict": {} }
+  for (const [styleId] of Object.entries(bcmbnWorkJson?.styles?.styles_dict || {})) {
+    // 获取相关内容
+    const stylePath = (bcmbnWorkJson.styles.styles_dict as Record<string, any>)[styleId].path
+    const blobListIndex = Object.values(userimgPureBlobList).indexOf(stylePath)
+    if (blobListIndex == -1) continue;
+
+    // 获取blob内容
+    const res = await fetch(stylePath);
+    const imageBlob = await res.blob();
+
+    // 添加内容
+    const path = Object.keys(userimgPureBlobList)[blobListIndex]
+    zip.file(path ?? '', imageBlob);
+
+    (userImgDict.user_img_dict as Record<string, any>)[styleId] = { id: styleId, path: path };
+    // 还原
+    (bcmbnWorkJson.styles.styles_dict as Record<string, any>)[styleId].path = path
+  }
+  // 新增作品内容
+  zip.file("index.bcm", JSON.stringify(bnState.bcmJson));
+  zip.file("extensions.json", JSON.stringify({ extensions: bnState.bcmJson.extensions }));
+
+  // 新增目前不支持的占位符
+  zip.file("index.cover", '');
+  zip.file("index.meta", JSON.stringify(
+    {}
+  ));
+  zip.file("index.userimg", JSON.stringify(userImgDict));
+  const zipBlob = await zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+  });
+  downloadBlob(zipBlob, `${bnState.bcmJson.project_name}.bcmbn`)
+}
+
 watch(
   () => bnState.isPad,
   () => {
@@ -228,7 +270,8 @@ onMounted(() => {
         <mdui-divider></mdui-divider>
         <mdui-menu-item @click="openFileWindow()">打开 .json 作品</mdui-menu-item>
         <mdui-menu-item @click="openZipWindow()">打开 .bcmbn 作品</mdui-menu-item>
-        <mdui-menu-item @click="saveFile()">下载作品</mdui-menu-item>
+        <mdui-menu-item @click="saveFile()" :disabled="bnState.isZipWork">下载 .json 作品</mdui-menu-item>
+        <mdui-menu-item @click="saveJsonFile()" :disabled="!bnState.isZipWork">下载 .bcmbn 作品</mdui-menu-item>
       </mdui-menu>
     </mdui-dropdown>
     <mdui-dropdown>

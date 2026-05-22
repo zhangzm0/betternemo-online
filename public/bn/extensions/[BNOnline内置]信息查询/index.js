@@ -29,7 +29,7 @@ Extension.metaData = {
       }, '*');
     }
   };
-  window.loadURLExtension = async (url) => {
+  window.loadURLExtension = async (url, isLoad = true) => {
     function getRandomStr(n = 6) {
       const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
       let str = '';
@@ -93,17 +93,19 @@ Extension.metaData = {
     });
     const extensionAPI = createExtensionAPI(extMetaData);
     Extension.API = extensionAPI;
-    await loadScript(url);
-    extensionMetaData[key] = { ...extMetaData };
-    BN.log('ConfigPanel', '已从URL使用扩展' + key);
-    EXTENSION_FILES.push(key)
-    setLoaderInfo('扩展加载完成！', 2);
-    await isElementLoaded('#toolbox-bn');
-    setTimeout(() => {
-      reloadExtension();
-      BetterNemo.log('扩展管理', '已重新加载扩展积木盒');
-      window.bnOnline.postMessage(`远程扩展 ${url} 加载成功!`)
-    }, 500);
+    if (isLoad) {
+      await loadScript(url);
+      extensionMetaData[key] = { ...extMetaData };
+      BN.log('ConfigPanel', '已从URL使用扩展' + key);
+      EXTENSION_FILES.push(key)
+      setLoaderInfo('扩展加载完成！', 2);
+      await isElementLoaded('#toolbox-bn');
+      setTimeout(() => {
+        reloadExtension();
+        BetterNemo.log('扩展管理', '已重新加载扩展积木盒');
+        window.bnOnline.postMessage(`远程扩展 ${url} 加载成功!`)
+      }, 500);
+    }
   }
   const BN = Extension.API;
   const Block = BN.Block;

@@ -139,6 +139,7 @@ if (!PLAYER && isPCTestEnv()) {
 }
 // --------------- 扩展、主题数据初始化 ---------------
 let extensionMetaData = {};
+window.extensionMetaData = extensionMetaData;
 let themeMetaData = {};
 // --------------- 加载页面 ---------------
 (async () => {
