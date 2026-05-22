@@ -537,7 +537,8 @@ function reloadExtension() {
       version: "",
       description: "",
       author: "未知",
-      docs: ""
+      docs: "",
+      url: ''
     };
     Object.defineProperty(Extension, 'metaData', {
       get() { return extMetaData; },

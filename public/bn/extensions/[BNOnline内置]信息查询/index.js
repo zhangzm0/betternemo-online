@@ -6,6 +6,7 @@ Extension.metaData = {
   description: "BNOnline辅助扩展",
   author: "BNOnline",
   docs: "",
+  url: ''
 };
 
 (async (Extension) => {

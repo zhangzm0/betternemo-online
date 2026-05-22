@@ -24,6 +24,7 @@ export const useBNStateStore = defineStore('bnState', () => {
   const domStore = useDomStore()
   const isPlay = ref(false)
   const isPad = ref(true)
+  const isZipWork = ref(false)
   const defaultBCMJson = ref({
     actors: {
       actors_dict: {
@@ -175,6 +176,7 @@ export const useBNStateStore = defineStore('bnState', () => {
       },
       current_actor: '0a67a969-430b-4f03-b35a-a91ef4c917b9',
     },
+    extensions: [],
     app_version: '1.3.0',
     audios: {
       sounds: {},
@@ -766,6 +768,8 @@ export const useBNStateStore = defineStore('bnState', () => {
       iframeWin._dsaf.postMessageAsyn('REQUEST_ALL_SAVE_DATA', {}, resolve)
     })
 
+    const extensions = iframeWin.extensionMetaData
+
     workResult = result
     blocksInfo = result.xml
     const actors_dict = bcmJson.value.actors.actors_dict
@@ -787,6 +791,14 @@ export const useBNStateStore = defineStore('bnState', () => {
     bcmJson.value.broadcast.broadcast_dict = workResult.broadcast_dict as any
     bcmJson.value.procedures.procedure_dict = workResult.procedure_dict as any
     bcmJson.value.split_options.options_dict = workResult.split_options as any
+    bcmJson.value.extensions = []
+    for (const extension of extensions) {
+      ;(bcmJson.value.extensions as Array<any>).push({
+        name: extension?.fileName,
+        version: extension?.version,
+        url: extension?.url,
+      })
+    }
   }
   return {
     newWork,
@@ -802,5 +814,6 @@ export const useBNStateStore = defineStore('bnState', () => {
     isLoading,
     workId,
     workExtensions,
+    isZipWork,
   }
 })

@@ -12,6 +12,10 @@ BetterNemo 的 Web 版本!
 2. `npm install`；
 3. `npm run dev`。
 
+## WIP
+
+- bcmbn 支持。
+
 ## Q&A
 
 Q1: 如何更新 BetterNemo 版本？

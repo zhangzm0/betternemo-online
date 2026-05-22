@@ -41,7 +41,7 @@ const playWork = () => {
         <AppBarMenu />
       </mdui-menu>
     </mdui-dropdown>
-    <mdui-navigation-rail-item icon="code" value="jsonEditor"
+    <mdui-navigation-rail-item icon="code" value="jsonEditor" v-if="!bnState.isZipWork"
       @click="pages.changePage('jsonEditor')"></mdui-navigation-rail-item>
     <mdui-navigation-rail-item icon="people" value="actor"
       @click="pages.changePage('actor')"></mdui-navigation-rail-item>

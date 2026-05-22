@@ -7,9 +7,10 @@ import { downloadString } from "@/utils/blobTools";
 
 import { prompt as mdPrompt } from 'mdui/functions/prompt.js';
 import { useAuthStore } from "@/stores/auth";
-import { MenuItem, Select, setColorScheme } from "mdui";
+import { Select, setColorScheme } from "mdui";
 import { useDomStore } from "@/stores/dom";
 import JSZip from "jszip";
+import { alert as mdAlert } from 'mdui/functions/alert.js';
 
 const authStore = useAuthStore()
 const bnState = useBNStateStore()
@@ -59,6 +60,7 @@ const openFile = () => {
         return
       }
       bnState.goWork(JSON.parse(String(result)), true)
+      bnState.isZipWork = false
     };
     if (!file) {
       return
@@ -121,7 +123,8 @@ const openZip = async () => {
     }
     workExtensionsDialog.value.open = true
     bnState.bcmJson = JSON.parse(JSON.stringify(workObject))
-    zipOpen.value.value = ''
+    zipOpen.value.value = '';
+    (bnState.bcmJson.extensions as any) = bnState.workExtensions
   }
   catch (e) {
     console.error(e)
@@ -189,6 +192,7 @@ const openZipWorkAndExtensions = async () => {
       (domStore.iframeRef.contentWindow as unknown as any).loadURLExtension(extension.url)
     }
   }
+  bnState.isZipWork = true
   workExtensionsDialog.value.open = false
 }
 
@@ -242,13 +246,13 @@ onMounted(() => {
       <mdui-button variant="outlined" slot="trigger" class="pc-menu-button">账号</mdui-button>
       <mdui-menu>
         <mdui-menu-item @click="notLogin()">{{ authStore.notLogin ? '禁用' : '启用'
-        }}离线模式</mdui-menu-item>
+          }}离线模式</mdui-menu-item>
         <mdui-menu-item @click="loginDialog!.open = true" v-if="!token || !userId">登录</mdui-menu-item>
         <mdui-menu-item v-else>
           用户信息
           <mdui-menu-item slot="submenu">昵称: {{ authStore.userData.userInfo.user.nickname }}</mdui-menu-item>
           <mdui-menu-item slot="submenu">性别: {{ authStore.userData.userInfo.user.sex == 1 ? '男' : '女'
-            }}</mdui-menu-item>
+          }}</mdui-menu-item>
           <mdui-menu-item slot="submenu">UID: {{ authStore.userData.userInfo.user.id }}</mdui-menu-item>
         </mdui-menu-item>
       </mdui-menu>
